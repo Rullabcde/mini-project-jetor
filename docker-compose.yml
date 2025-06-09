@@ -6,10 +6,10 @@ services:
     container_name: mysql
     restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD:
-      MYSQL_DATABASE: wordpress
-      MYSQL_USER:
-      MYSQL_PASSWORD:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
     volumes:
       - ./mysql:/var/lib/mysql
     networks:
@@ -22,10 +22,10 @@ services:
     depends_on:
       - mysql
     environment:
-      WORDPRESS_DB_HOST: mysql:3306
-      WORDPRESS_DB_NAME: wordpress
-      WORDPRESS_DB_USER:
-      WORDPRESS_DB_PASSWORD:
+      WORDPRESS_DB_HOST: ${WORDPRESS_DB_HOST}
+      WORDPRESS_DB_NAME: ${WORDPRESS_DB_NAME}
+      WORDPRESS_DB_USER: ${WORDPRESS_DB_USER}
+      WORDPRESS_DB_PASSWORD: ${WORDPRESS_DB_PASSWORD}
     volumes:
       - ./wordpress:/var/www/html
     networks:
@@ -38,9 +38,9 @@ services:
     depends_on:
       - mysql
     environment:
-      PMA_HOST: mysql
-      PMA_PORT: 3306
-      PMA_ABSOLUTE_URI: https://jetrullabcd.my.id/phpmyadmin/
+      PMA_HOST: ${PMA_HOST}
+      PMA_PORT: ${PMA_PORT}
+      PMA_ABSOLUTE_URI: ${PMA_ABSOLUTE_URI}
     networks:
       - wp_network
 
