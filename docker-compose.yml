@@ -1,5 +1,4 @@
 version: "3.3"
-
 services:
   mysql:
     image: mysql:8.0
@@ -53,10 +52,23 @@ services:
       - "443:443"
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./nginx/ssl:/etc/nginx/ssl:ro
+      - ./certbot/conf:/etc/letsencrypt:ro
+      - ./certbot/www:/var/www/certbot:ro
     depends_on:
       - wordpress
       - phpmyadmin
+    networks:
+      - wp_network
+
+  certbot:
+    image: certbot/certbot:latest
+    container_name: certbot
+    volumes:
+      - ./certbot/conf:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
+    command: certonly --webroot -w /var/www/certbot --email email@gmail.com -d domain.com --agree-tos --no-eff-email
+    # Untuk auto-renewal setiap 12 jam gunakan script dibawah:
+    # entrypoint: /bin/sh -c "trap exit TERM; while :; do certbot renew; sleep 12h & wait $$!; done;"
     networks:
       - wp_network
 

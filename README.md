@@ -1,52 +1,52 @@
-# Mini Project Deploy Project Wordpress
+# Deploy WordPress dengan Docker, Nginx, dan SSL (Let's Encrypt)
 
-[](https://opensource.org/licenses/MIT)
+Ini adalah sebuah boilerplate untuk melakukan deployment aplikasi WordPress secara mudah menggunakan Docker Compose. Proyek ini sudah mencakup Nginx sebagai _reverse proxy_, database MySQL, phpMyAdmin, dan konfigurasi SSL otomatis menggunakan Certbot (Let's Encrypt).
 
-## Instalasi dan Konfigurasi
+## Fitur Utama
 
-Berikut adalah langkah-langkah untuk menyiapkan dan menjalankan proyek ini.
+- **WordPress**: Sistem manajemen konten (CMS) yang siap digunakan.
+- **Nginx**: Berfungsi sebagai _reverse proxy_ untuk WordPress dan menangani terminasi SSL.
+- **MySQL**: Database untuk instalasi WordPress.
+- **phpMyAdmin**: Alat bantu untuk mengelola database MySQL melalui antarmuka web.
+- **Certbot**: Untuk membuat dan memperbarui sertifikat SSL dari Let's Encrypt secara otomatis.
 
-### 1\. Instalasi Certbot
+## Struktur Direktori
 
-Certbot adalah alat untuk secara otomatis mendapatkan dan memperbarui sertifikat SSL/TLS dari Let's Encrypt.
-
-```bash
-sudo apt update
-sudo apt install certbot -y
+```
+.
+├── certbot/
+│   ├── conf/
+│   └── www/
+├── nginx/
+│   ├── nginx.conf          # Digunakan untuk inisialisasi SSL
+│   └── nginx-ssl.conf      # Konfigurasi final dengan SSL
+├── .env                    # File konfigurasi (dibuat manual)
+├── docker-compose.yml      # Definisi semua service docker
+└── README.md
 ```
 
-### 2\. Penerbitan Sertifikat SSL
+## Prasyarat
 
-Gunakan Certbot untuk menerbitkan sertifikat untuk domain. Metode `dns` dipilih untuk verifikasi kepemilikan domain.
+Sebelum memulai, pastikan Anda memiliki:
 
-```bash
-sudo certbot certonly --manual --preferred-challenges dns -d domain.com
-```
+1.  **Docker** dan **Docker Compose** terinstal di server Anda.
+2.  Sebuah **nama domain** yang sudah terdaftar (contoh: `domain.com`).
+3.  Server (VPS) dengan **IP publik** yang dapat diakses dari internet.
+4.  **DNS record (tipe A)** untuk domain Anda yang sudah diarahkan (`pointing`) ke IP publik server.
 
-> **Penting:** Ganti `domain.com` dengan nama domain Anda. Ikuti instruksi di terminal untuk menambahkan **TXT record** yang diberikan oleh Certbot ke DNS manager domain sebelum melanjutkan.
+## Langkah-langkah Instalasi dan Konfigurasi
 
-### 3\. Konfigurasi Nginx
+Berikut adalah panduan lengkap untuk menjalankan proyek ini dari awal hingga production.
 
-Salin sertifikat yang telah diterbitkan ke direktori konfigurasi Nginx agar dapat digunakan.
-
-**a. Buat direktori SSL:**
-
-```bash
-mkdir -p nginx/ssl
-```
-
-**b. Salin file sertifikat:**
-
-Salin `fullchain.pem` dan `privkey.pem` dari direktori Let's Encrypt. Lokasi defaultnya adalah `/etc/letsencrypt/live/domain.com/`.
+### Langkah 1: Kloning Repositori
 
 ```bash
-sudo cp /etc/letsencrypt/live/domain.com/fullchain.pem ./nginx/ssl/
-sudo cp /etc/letsencrypt/live/domain.com/privkey.pem ./nginx/ssl/
+git clone https://github.com/Rullabcde/mini-project-jetor.git
 ```
 
-### 4\. Konfigurasi Environment
+### Langkah 2: Konfigurasi Environment
 
-Buat file `.env` di direktori utama proyek untuk menyimpan variabel sensitif seperti kredensial database.
+File `.env` digunakan untuk menyimpan semua variabel sensitif seperti password database dan konfigurasi lainnya.
 
 **a. Buat file `.env`:**
 
@@ -54,31 +54,177 @@ Buat file `.env` di direktori utama proyek untuk menyimpan variabel sensitif sep
 touch .env
 ```
 
-**b. Isi file `.env` dengan konfigurasi berikut:**
+**b. Isi file `.env` dengan konfigurasi berikut dan sesuaikan.**
 
 ```env
 # MySQL
-MYSQL_ROOT_PASSWORD=
-MYSQL_DATABASE=
-MYSQL_USER=
-MYSQL_PASSWORD=
+MYSQL_ROOT_PASSWORD=your_root_password
+MYSQL_DATABASE=wordpress_db
+MYSQL_USER=wordpress_user
+MYSQL_PASSWORD=your_password
 
 # WordPress
 WORDPRESS_DB_HOST=mysql:3306
-WORDPRESS_DB_NAME=${MYSQL_DATABASE}
-WORDPRESS_DB_USER=${MYSQL_USER}
-WORDPRESS_DB_PASSWORD=${MYSQL_PASSWORD}
+WORDPRESS_DB_NAME=wordpress_db
+WORDPRESS_DB_USER=wordpress_user
+WORDPRESS_DB_PASSWORD=your_password
 
 # phpMyAdmin
 PMA_HOST=mysql
 PMA_PORT=3306
-PMA_ABSOLUTE_URI=https://phpmyadmin.domain.com
+PMA_ABSOLUTE_URI=https://domain.com/phpmyadmin
 ```
 
-### 5\. Jalankan Aplikasi
+### Langkah 3: Generate Sertifikat SSL (Let's Encrypt)
 
-Setelah semua konfigurasi selesai, jalankan semua layanan menggunakan Docker Compose dalam mode _detached_ (`-d`).
+Proses ini memerlukan Nginx untuk berjalan sementara di port 80 untuk validasi domain oleh Certbot.
+
+**a. Persiapan Direktori & Konfigurasi Nginx Awal**
+
+Buat direktori yang dibutuhkan oleh Certbot dan Nginx.
 
 ```bash
+mkdir -p ./certbot/conf ./certbot/www ./nginx
+```
+
+Salin konfigurasi Nginx awal (hanya HTTP) dari file template yang tersedia di repositori.
+
+```bash
+# Salin konten dari `nginx/nginx.conf` yang ada di repositori ini
+cp nginx/nginx.conf nginx/nginx.conf
+```
+
+**b. Jalankan Service untuk Validasi Domain**
+
+Jalankan hanya service yang diperlukan untuk proses validasi Certbot.
+
+```bash
+# Jalankan service tanpa SSL (hanya Nginx, MySQL, WordPress, phpMyAdmin)
+docker-compose up -d mysql wordpress phpmyadmin nginx
+```
+
+**c. Buat Sertifikat SSL**
+
+Jalankan service `certbot` untuk meminta sertifikat SSL dari Let's Encrypt.
+
+> **Penting:**
+>
+> - Pastikan Anda sudah mengubah `email@gmail.com` dan `domain.com` di dalam file `docker-compose.yml` pada service `certbot`.
+> - Pastikan domain Anda sudah mengarah ke IP server ini.
+> - Pastikan port 80 pada server Anda dapat diakses dari internet.
+
+```bash
+# Jalankan service certbot untuk membuat sertifikat
+docker-compose run --rm certbot
+```
+
+**d. Verifikasi Sertifikat**
+
+Cek apakah sertifikat berhasil dibuat di direktori yang sesuai.
+
+```bash
+ls -la ./certbot/conf/live/domain.com/
+```
+
+Anda seharusnya melihat file `fullchain.pem` dan `privkey.pem`.
+
+### Langkah 4: Konfigurasi Nginx dengan SSL dan Jalankan Aplikasi
+
+Setelah sertifikat berhasil didapatkan, ganti konfigurasi Nginx untuk menggunakan SSL.
+
+**a. Update Konfigurasi Nginx untuk SSL**
+
+Ganti file `nginx.conf` dengan konfigurasi yang sudah menyertakan SSL.
+
+```bash
+# Timpa file konfigurasi Nginx dengan versi SSL
+cp nginx/nginx-ssl.conf nginx/nginx.conf
+```
+
+**b. Muat Ulang Nginx**
+
+Terapkan konfigurasi baru pada Nginx tanpa perlu me-restart kontainer.
+
+```bash
+docker-compose exec nginx nginx -s reload
+```
+
+### Langkah 5: Konfigurasi Auto-Renewal Sertifikat
+
+Untuk penggunaan jangka panjang (production), Anda perlu mengaktifkan perpanjangan otomatis sertifikat SSL.
+
+**a. Modifikasi `docker-compose.yml`**
+
+Edit service `certbot` di file `docker-compose.yml` menjadi seperti ini:
+
+```yaml
+certbot:
+  image: certbot/certbot:latest
+  container_name: certbot
+  volumes:
+    - ./certbot/conf:/etc/letsencrypt
+    - ./certbot/www:/var/www/certbot
+  # command: certonly --webroot -w /var/www/certbot --email email@gmail.com -d domain.com --agree-tos --no-eff-email # Baris ini dinonaktifkan setelah pembuatan sertifikat pertama
+  # Aktifkan entrypoint untuk auto-renewal setiap 12 jam
+  entrypoint: /bin/sh -c "trap exit TERM; while :; do certbot renew; sleep 12h & wait $$!; done;"
+  networks:
+    - wp_network
+```
+
+**b. Terapkan Perubahan dan Jalankan Semua Services**
+
+```bash
+# Jalankan kembali semua service dengan konfigurasi terbaru
 docker-compose up -d
 ```
+
+**c. Uji Coba Proses Renewal (Opsional)**
+
+Anda bisa melakukan simulasi perpanjangan untuk memastikan konfigurasinya benar.
+
+```bash
+docker-compose run --rm certbot renew --dry-run
+```
+
+## Verifikasi Setup
+
+Gunakan perintah berikut untuk memastikan semua konfigurasi berjalan dengan baik.
+
+```bash
+# Tes redirect dari HTTP ke HTTPS
+curl -I http://domain.com
+
+# Tes koneksi HTTPS
+curl -I https://domain.com
+
+# Tes sertifikat SSL secara detail
+openssl s_client -connect domain.com:443 -servername domain.com
+
+# Cek tanggal kedaluwarsa sertifikat
+docker run --rm -v $(pwd)/certbot/conf:/etc/letsencrypt certbot/certbot certificates
+```
+
+## Akses Aplikasi
+
+- **WordPress**: `https://domain.com`
+- **phpMyAdmin**: `https://domain.com/phpmyadmin`
+
+## Troubleshooting
+
+#### Gagal Membuat Sertifikat SSL
+
+1.  **DNS Propagation**: Pastikan domain sudah benar-benar mengarah ke IP server Anda. Cek dengan `nslookup domain.com`.
+2.  **Firewall**: Pastikan firewall di server Anda (misalnya `ufw`) mengizinkan trafik masuk pada port 80 dan 443.
+3.  **Port 80 Terpakai**: Pastikan tidak ada aplikasi lain (seperti Apache) yang sedang berjalan dan menggunakan port 80.
+4.  **Rate Limit Let's Encrypt**: Jika Anda terlalu sering mencoba, Let's Encrypt mungkin akan memblokir permintaan Anda untuk sementara waktu.
+
+#### Nginx Gagal Berjalan
+
+1.  **Cek Sintaks Konfigurasi**: Jalankan perintah ini untuk memvalidasi file `nginx.conf`.
+    ```bash
+    docker run --rm -v $(pwd)/nginx/nginx.conf:/etc/nginx/nginx.conf nginx nginx -t
+    ```
+2.  **Cek Log Nginx**: Lihat log untuk pesan error yang lebih spesifik.
+    ```bash
+    docker-compose logs nginx
+    ```
