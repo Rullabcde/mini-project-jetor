@@ -12,7 +12,7 @@ This is a boilerplate for deploying a WordPress application easily using Docker 
 
 ## Topology
 
-<img src="Topology.png" alt="Topology" width="300"/>
+<img src="Topology.png" alt="Topology" width="500"/>
 
 ## Directory Structure
 
