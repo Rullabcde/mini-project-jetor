@@ -4,11 +4,15 @@ This is a boilerplate for deploying a WordPress application easily using Docker 
 
 ## Key Features
 
-* **WordPress**: A ready-to-use content management system (CMS).
-* **Nginx**: Serves as a reverse proxy for WordPress and handles SSL termination.
-* **MySQL**: Database for the WordPress installation.
-* **phpMyAdmin**: A web-based tool for managing MySQL databases.
-* **Certbot**: Automatically creates and renews SSL certificates from Let's Encrypt.
+- **WordPress**: A ready-to-use content management system (CMS).
+- **Nginx**: Serves as a reverse proxy for WordPress and handles SSL termination.
+- **MySQL**: Database for the WordPress installation.
+- **phpMyAdmin**: A web-based tool for managing MySQL databases.
+- **Certbot**: Automatically creates and renews SSL certificates from Let's Encrypt.
+
+## Topology
+
+<img src="Topology.png" alt="Topology" width="300"/>
 
 ## Directory Structure
 
@@ -20,8 +24,8 @@ This is a boilerplate for deploying a WordPress application easily using Docker 
 ├── nginx/
 │   ├── nginx.conf          # Used for initial SSL setup
 │   └── nginx-ssl.conf      # Final configuration with SSL
-├── .env                    # Configuration file (created manually)
-├── docker-compose.yml      # Defines all docker services
+├── .env
+├── docker-compose.yml
 └── README.md
 ```
 
@@ -99,7 +103,7 @@ cp nginx/nginx.conf nginx/nginx.conf
 Run only the necessary services for the Certbot validation process.
 
 ```bash
-# Run services without SSL (only Nginx, MySQL, WordPress, phpMyAdmin)
+# Run services without SSL
 docker-compose up -d mysql wordpress phpmyadmin nginx
 ```
 
@@ -109,9 +113,9 @@ Run the `certbot` service to request an SSL certificate from Let’s Encrypt.
 
 > **Important:**
 >
-> * Make sure to replace `email@gmail.com` and `domain.com` in the `docker-compose.yml` file under the `certbot` service.
-> * Ensure your domain is correctly pointed to this server’s IP.
-> * Ensure port 80 is accessible from the internet.
+> - Make sure to replace `email@gmail.com` and `domain.com` in the `docker-compose.yml` file under the `certbot` service.
+> - Ensure your domain is correctly pointed to this server’s IP.
+> - Ensure port 80 is accessible from the internet.
 
 ```bash
 # Run certbot service to create the certificate
@@ -206,29 +210,7 @@ docker run --rm -v $(pwd)/certbot/conf:/etc/letsencrypt certbot/certbot certific
 
 ## Application Access
 
-* **WordPress**: `https://domain.com`
-* **phpMyAdmin**: `https://domain.com/phpmyadmin`
-
-## Troubleshooting
-
-#### Failed to Generate SSL Certificate
-
-1. **DNS Propagation**: Ensure the domain is correctly pointed to your server’s IP. Check with `nslookup domain.com`.
-2. **Firewall**: Ensure your server’s firewall (e.g., `ufw`) allows incoming traffic on ports 80 and 443.
-3. **Port 80 in Use**: Ensure no other application (like Apache) is using port 80.
-4. **Let's Encrypt Rate Limit**: If you've made too many attempts, Let’s Encrypt may temporarily block your requests.
-
-#### Nginx Fails to Start
-
-1. **Check Configuration Syntax**: Run this command to validate the `nginx.conf` file.
-
-   ```bash
-   docker run --rm -v $(pwd)/nginx/nginx.conf:/etc/nginx/nginx.conf nginx nginx -t
-   ```
-2. **Check Nginx Logs**: Look at the logs for more specific error messages.
-
-   ```bash
-   docker-compose logs nginx
-   ```
+- **WordPress**: `https://domain.com`
+- **phpMyAdmin**: `https://domain.com/phpmyadmin`
 
 ---
